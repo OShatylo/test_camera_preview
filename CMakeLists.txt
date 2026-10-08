@@ -9,6 +9,7 @@ list(APPEND SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/commandline_arguments_parser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/device_validator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/application.cpp
 )
 
 find_package(OpenCV REQUIRED)
