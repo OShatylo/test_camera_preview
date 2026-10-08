@@ -5,10 +5,16 @@ project(camera_preview LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+list(APPEND SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/commandline_arguments_parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/device_validator.cpp
+)
+
 find_package(OpenCV REQUIRED)
 
 add_executable(${PROJECT_NAME}
-    src/main.cpp
+    ${SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -19,4 +25,5 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${OpenCV_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

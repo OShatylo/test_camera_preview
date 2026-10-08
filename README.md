@@ -21,8 +21,8 @@ sudo apt install g++ gcc build-essential cmake libopencv-dev
 Build application
 
 ```bash
-git clone https://github.com/OShatylo/test_camera-preview.git
-cd test_camera-preview
+git clone https://github.com/OShatylo/test_camera_preview.git
+cd test_camera_preview
 mkdir build
 cmake .. && make -j
 ```
