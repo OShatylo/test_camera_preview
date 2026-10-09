@@ -17,7 +17,7 @@ struct Cmd_args
     std::uint32_t fps{0};
 };
 
-class Commandline_arguments_parser
+class Commandline_arguments_parser final
 {
   public:
     Commandline_arguments_parser(int argc, char *argv[]);

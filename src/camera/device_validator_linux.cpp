@@ -137,7 +137,7 @@ bool validate_device(const std::string &camera_device, std::uint32_t width, std:
 
     if (fd.get() < 0)
     {
-        std::cerr << "Failed to open camera device: " << camera_device << '\n';
+        std::cerr << "Failed to open camera device: " << camera_device << "\n";
 
         return false;
     }
@@ -146,14 +146,14 @@ bool validate_device(const std::string &camera_device, std::uint32_t width, std:
 
     if (ioctl(fd.get(), VIDIOC_QUERYCAP, &capability) < 0)
     {
-        std::cerr << "Failed to query camera capabilities: " << camera_device << '\n';
+        std::cerr << "Failed to query camera capabilities: " << camera_device << "\n";
 
         return false;
     }
 
     if (!is_video_capture_device(capability))
     {
-        std::cerr << "Device does not support video capture: " << camera_device << '\n';
+        std::cerr << "Device does not support video capture: " << camera_device << "\n";
 
         return false;
     }

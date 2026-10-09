@@ -77,7 +77,7 @@ bool Commandline_arguments_parser::parse(int argc, char *argv[])
         case static_cast<int>(cmd_parameters::width):
             if (!parse_positive_uint(optarg, args_.width))
             {
-                std::cerr << "Invalid width: " << optarg << '\n';
+                std::cerr << "Invalid width: " << optarg << "\n";
                 return false;
             }
             break;
@@ -85,7 +85,7 @@ bool Commandline_arguments_parser::parse(int argc, char *argv[])
         case static_cast<int>(cmd_parameters::height):
             if (!parse_positive_uint(optarg, args_.height))
             {
-                std::cerr << "Invalid height: " << optarg << '\n';
+                std::cerr << "Invalid height: " << optarg << "\n";
                 return false;
             }
             break;
@@ -93,7 +93,7 @@ bool Commandline_arguments_parser::parse(int argc, char *argv[])
         case static_cast<int>(cmd_parameters::fps):
             if (!parse_positive_uint(optarg, args_.fps))
             {
-                std::cerr << "Invalid FPS: " << optarg << '\n';
+                std::cerr << "Invalid FPS: " << optarg << "\n";
                 return false;
             }
             break;
@@ -109,7 +109,7 @@ bool Commandline_arguments_parser::parse(int argc, char *argv[])
 
     if (optind < argc)
     {
-        std::cerr << "Unexpected argument: " << argv[optind] << '\n';
+        std::cerr << "Unexpected argument: " << argv[optind] << "\n";
 
         return false;
     }

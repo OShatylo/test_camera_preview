@@ -1,40 +1,90 @@
 #include "application/application.hpp"
 
+#include "core/latest_frame_buffer.hpp"
+
+#include <atomic>
 #include <chrono>
-#include <cstdint>
-#include <iomanip>
+#include <cstddef>
 #include <iostream>
-#include <opencv2/opencv.hpp>
-#include <string>
+#include <memory>
+#include <thread>
 #include <utility>
 
 namespace
 {
 
-constexpr std::uint32_t byte_mask{0xFF};
-
-constexpr int second_byte_shift{8};
-constexpr int third_byte_shift{16};
-constexpr int fourth_byte_shift{24};
-
-constexpr int key_mask{0xFF};
-constexpr int key_escape{27};
-
 constexpr double fps_measurement_interval_sec{1.0};
 
-std::string four_character_code_to_string(std::uint32_t four_character_code)
+void capture_loop(std::shared_ptr<camera_source::Camera_source> camera_source, Latest_frame_buffer *frame_buffer,
+                  std::atomic<bool> *stop_requested, std::atomic<bool> *capture_failed)
 {
-    if (four_character_code == 0)
+    while (!stop_requested->load())
     {
-        return "unknown";
+        Frame frame;
+
+        if (!camera_source->read(frame))
+        {
+            if (!stop_requested->load())
+            {
+                std::cerr << "Failed to read frame\n";
+                capture_failed->store(true);
+            }
+
+            stop_requested->store(true);
+            frame_buffer->stop();
+
+            return;
+        }
+
+        frame_buffer->push(std::move(frame));
+    }
+}
+
+void render_loop(std::shared_ptr<renderer::Renderer> renderer, Latest_frame_buffer *frame_buffer,
+                 std::atomic<bool> *stop_requested)
+{
+    std::size_t frame_counter{0};
+    double measured_fps{0.0};
+
+    auto fps_start{std::chrono::steady_clock::now()};
+
+    while (!stop_requested->load())
+    {
+        Frame frame;
+
+        if (!frame_buffer->wait_and_pop(frame))
+        {
+            break;
+        }
+
+        const auto now{std::chrono::steady_clock::now()};
+
+        const double frame_age_ms{std::chrono::duration<double, std::milli>(now - frame.timestamp).count()};
+
+        ++frame_counter;
+
+        const double elapsed{std::chrono::duration<double>(now - fps_start).count()};
+
+        if (elapsed >= fps_measurement_interval_sec)
+        {
+            measured_fps = static_cast<double>(frame_counter) / elapsed;
+
+            frame_counter = 0;
+            fps_start = now;
+        }
+
+        const renderer::Render_statistics statistics{measured_fps, frame_age_ms, frame_buffer->dropped_frames()};
+
+        if (!renderer->render(frame, statistics))
+        {
+            stop_requested->store(true);
+            frame_buffer->stop();
+
+            break;
+        }
     }
 
-    const char format[] = {static_cast<char>(four_character_code & byte_mask),
-                           static_cast<char>((four_character_code >> second_byte_shift) & byte_mask),
-                           static_cast<char>((four_character_code >> third_byte_shift) & byte_mask),
-                           static_cast<char>((four_character_code >> fourth_byte_shift) & byte_mask)};
-
-    return {format, 4};
+    renderer->close();
 }
 
 } // namespace
@@ -42,111 +92,41 @@ std::string four_character_code_to_string(std::uint32_t four_character_code)
 namespace application
 {
 
-Application::Application(Commandline_arguments::Cmd_args args, device_validator::Device_validator &device_validator)
-    : args_{std::move(args)}, device_validator_{device_validator}
+Application::Application(Commandline_arguments::Cmd_args args,
+                         std::shared_ptr<camera_source::Camera_source> camera_source,
+                         std::shared_ptr<renderer::Renderer> renderer,
+                         std::unique_ptr<device_validator::Device_validator> device_validator)
+    : args_{std::move(args)}, camera_source_{std::move(camera_source)}, renderer_{std::move(renderer)},
+      device_validator_{std::move(device_validator)}
 {
 }
 
 bool Application::run()
 {
-    if (!device_validator_.is_valid(args_.camera_device, args_.width, args_.height, args_.fps))
+    if (!device_validator_->is_valid(args_.camera_device, args_.width, args_.height, args_.fps))
     {
         std::cerr << "Requested camera configuration is not supported\n";
-
         return false;
     }
 
-    cv::VideoCapture camera{args_.camera_device, cv::CAP_V4L2};
-
-    if (!camera.isOpened())
+    if (!camera_source_->open(args_.camera_device, args_.width, args_.height, args_.fps))
     {
-        std::cerr << "Failed to open camera: " << args_.camera_device << '\n';
-
         return false;
     }
 
-    if (args_.width > 0)
-    {
-        camera.set(cv::CAP_PROP_FRAME_WIDTH, static_cast<double>(args_.width));
-    }
+    Latest_frame_buffer frame_buffer;
 
-    if (args_.height > 0)
-    {
-        camera.set(cv::CAP_PROP_FRAME_HEIGHT, static_cast<double>(args_.height));
-    }
+    std::atomic<bool> stop_requested{false};
+    std::atomic<bool> capture_failed{false};
 
-    if (args_.fps > 0)
-    {
-        camera.set(cv::CAP_PROP_FPS, static_cast<double>(args_.fps));
-    }
+    std::thread capture_thread{capture_loop, camera_source_, &frame_buffer, &stop_requested, &capture_failed};
 
-    const auto width{static_cast<std::uint32_t>(camera.get(cv::CAP_PROP_FRAME_WIDTH))};
+    std::thread render_thread{render_loop, renderer_, &frame_buffer, &stop_requested};
 
-    const auto height{static_cast<std::uint32_t>(camera.get(cv::CAP_PROP_FRAME_HEIGHT))};
+    capture_thread.join();
+    render_thread.join();
 
-    const auto driver_fps{camera.get(cv::CAP_PROP_FPS)};
-
-    const auto four_character_code{static_cast<std::uint32_t>(camera.get(cv::CAP_PROP_FOURCC))};
-
-    std::cout << "Camera: " << args_.camera_device << '\n';
-
-    std::cout << "Resolution: " << width << 'x' << height << '\n';
-
-    std::cout << "Frame format: " << four_character_code_to_string(four_character_code) << '\n';
-
-    if (driver_fps > 0.0)
-    {
-        std::cout << "FPS: " << driver_fps << '\n';
-    }
-    else
-    {
-        std::cout << "FPS unavailable\n";
-    }
-
-    cv::Mat frame;
-
-    std::size_t frame_counter{0};
-
-    auto fps_start{std::chrono::steady_clock::now()};
-
-    while (true)
-    {
-        if (!camera.read(frame) || frame.empty())
-        {
-            std::cerr << "Failed to read frame\n";
-
-            return false;
-        }
-
-        ++frame_counter;
-
-        const auto now{std::chrono::steady_clock::now()};
-
-        const auto elapsed{std::chrono::duration<double>(now - fps_start).count()};
-
-        if (elapsed >= fps_measurement_interval_sec)
-        {
-            const auto real_fps{static_cast<double>(frame_counter) / elapsed};
-
-            std::cout << "Measured FPS: " << std::fixed << std::setprecision(1) << real_fps << '\n';
-
-            frame_counter = 0;
-            fps_start = now;
-        }
-
-        cv::imshow("Camera Preview", frame);
-
-        const auto key{cv::waitKey(1) & key_mask};
-
-        if ((key == key_escape) || (key == 'q') || (key == 'Q'))
-        {
-            break;
-        }
-    }
-
-    cv::destroyAllWindows();
-
-    return true;
+    return !capture_failed.load();
 }
 
 } // namespace application

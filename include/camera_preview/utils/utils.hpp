@@ -4,9 +4,11 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+
 namespace utils
 {
-class RAII_FD
+
+class RAII_FD final
 {
   public:
     explicit RAII_FD(int fd) : fd_{fd}
