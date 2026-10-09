@@ -7,9 +7,9 @@
 
 namespace
 {
-enum class cmd_parameters : std::uint8_t
+enum class cmd_parameters : std::uint32_t
 {
-    device = 80,
+    device = 1618,
     width,
     height,
     fps,

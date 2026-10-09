@@ -1,19 +1,25 @@
 #include "application/application.hpp"
-#include "camera/device_validator.hpp"
+
 #include <chrono>
+#include <cstdint>
 #include <iomanip>
+#include <iostream>
 #include <opencv2/opencv.hpp>
+#include <string>
 #include <utility>
 
 namespace
 {
+
 constexpr std::uint32_t byte_mask{0xFF};
+
 constexpr int second_byte_shift{8};
 constexpr int third_byte_shift{16};
 constexpr int fourth_byte_shift{24};
 
 constexpr int key_mask{0xFF};
 constexpr int key_escape{27};
+
 constexpr double fps_measurement_interval_sec{1.0};
 
 std::string four_character_code_to_string(std::uint32_t four_character_code)
@@ -30,22 +36,23 @@ std::string four_character_code_to_string(std::uint32_t four_character_code)
 
     return {format, 4};
 }
+
 } // namespace
 
 namespace application
 {
 
-Application::Application(Commandline_arguments::Cmd_args args) : args_{std::move(args)}
+Application::Application(Commandline_arguments::Cmd_args args, device_validator::Device_validator &device_validator)
+    : args_{std::move(args)}, device_validator_{device_validator}
 {
 }
 
 bool Application::run()
 {
-    device_validator::Device_validator validator{args_.camera_device, args_.width, args_.height, args_.fps};
-
-    if (!validator.is_valid())
+    if (!device_validator_.is_valid(args_.camera_device, args_.width, args_.height, args_.fps))
     {
         std::cerr << "Requested camera configuration is not supported\n";
+
         return false;
     }
 
@@ -107,6 +114,7 @@ bool Application::run()
         if (!camera.read(frame) || frame.empty())
         {
             std::cerr << "Failed to read frame\n";
+
             return false;
         }
 
@@ -140,4 +148,5 @@ bool Application::run()
 
     return true;
 }
+
 } // namespace application

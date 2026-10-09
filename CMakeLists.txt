@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 list(APPEND SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cli/commandline_arguments_parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/device_validator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/device_validator_linux.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/application/application.cpp
 )
 
