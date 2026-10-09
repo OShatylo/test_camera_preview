@@ -1,5 +1,5 @@
-#ifndef DEVICE_VALIDATOR_HPP
-#define DEVICE_VALIDATOR_HPP
+#ifndef CAMERA_PREVIEW_CAMERA_DEVICE_VALIDATOR_HPP
+#define CAMERA_PREVIEW_CAMERA_DEVICE_VALIDATOR_HPP
 
 #include <cstdint>
 #include <string>
@@ -25,4 +25,4 @@ class Device_validator
 };
 } // namespace device_validator
 
-#endif // DEVICE_VALIDATOR
+#endif // CAMERA_PREVIEW_CAMERA_DEVICE_VALIDATOR

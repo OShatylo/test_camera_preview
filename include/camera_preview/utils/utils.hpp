@@ -1,10 +1,11 @@
 
-#ifndef HELPER_HPP
-#define HELPER_HPP
+#ifndef CAMERA_PREVIEW_UTILS_UTILS_HPP
+#define CAMERA_PREVIEW_UTILS_UTILS_HPP
 
 #include <fcntl.h>
 #include <unistd.h>
-
+namespace utils
+{
 class RAII_FD
 {
   public:
@@ -37,4 +38,6 @@ class RAII_FD
     int fd_{-1};
 };
 
-#endif // HELPER_HPP
+} // namespace utils
+
+#endif // CAMERA_PREVIEW_UTILS_UTILS_HPP

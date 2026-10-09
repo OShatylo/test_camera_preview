@@ -7,9 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(APPEND SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/commandline_arguments_parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/device_validator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/cli/commandline_arguments_parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/device_validator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/application/application.cpp
 )
 
 find_package(OpenCV REQUIRED)
@@ -26,5 +26,5 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${OpenCV_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/camera_preview
 )

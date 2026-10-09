@@ -1,5 +1,5 @@
-#include "application.hpp"
-#include "commandline_arguments_parser.hpp"
+#include "application/application.hpp"
+#include "cli/commandline_arguments_parser.hpp"
 
 int main(int argc, char *argv[])
 {

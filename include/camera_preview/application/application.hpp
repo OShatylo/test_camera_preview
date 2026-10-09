@@ -1,7 +1,7 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#ifndef CAMERA_PREVIEW_APPLICATION_APPLICATION_HPP
+#define CAMERA_PREVIEW_APPLICATION_APPLICATION_HPP
 
-#include "commandline_arguments_parser.hpp"
+#include "cli/commandline_arguments_parser.hpp"
 
 namespace application
 {
@@ -10,7 +10,6 @@ class Application
 {
   public:
     explicit Application(Commandline_arguments::Cmd_args args);
-
     bool run();
 
   private:
@@ -19,4 +18,4 @@ class Application
 
 } // namespace application
 
-#endif // APPLICATION_HPP
+#endif // CAMERA_PREVIEW_APPLICATION_APPLICATION_HPP

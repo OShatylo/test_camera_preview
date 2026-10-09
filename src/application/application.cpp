@@ -1,5 +1,5 @@
-#include "application.hpp"
-#include "device_validator.hpp"
+#include "application/application.hpp"
+#include "camera/device_validator.hpp"
 #include <chrono>
 #include <iomanip>
 #include <opencv2/opencv.hpp>
@@ -140,3 +140,4 @@ bool Application::run()
 
     return true;
 }
+} // namespace application

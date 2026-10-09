@@ -1,5 +1,5 @@
-#include "device_validator.hpp"
-#include "helpers.hpp"
+#include "camera/device_validator.hpp"
+#include "utils/utils.hpp"
 #include <cmath>
 #include <cstdint>
 #include <fcntl.h>
@@ -123,7 +123,7 @@ bool validate_camera_parameters(int fd, std::uint32_t requested_width, std::uint
 
 bool validate_device(const std::string &camera_device, std::uint32_t width, std::uint32_t height, std::uint32_t fps)
 {
-    RAII_FD fd{open(camera_device.c_str(), O_RDWR | O_NONBLOCK)};
+    utils::RAII_FD fd{open(camera_device.c_str(), O_RDWR | O_NONBLOCK)};
 
     if (fd.get() < 0)
     {
