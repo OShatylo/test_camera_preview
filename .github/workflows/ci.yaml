@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build, Test and Coverage
 
 on:
   push:
@@ -7,14 +7,15 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -25,17 +26,56 @@ jobs:
             ninja-build \
             libopencv-dev \
             libgtest-dev \
-            libgmock-dev
+            libgmock-dev \
+            gcovr
 
       - name: Configure
         run: |
           cmake -S . -B build \
             -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_TESTING=ON
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_CXX_FLAGS="--coverage" \
+            -DCMAKE_EXE_LINKER_FLAGS="--coverage"
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          ctest \
+            --test-dir build \
+            --output-on-failure \
+            --output-junit test-results.xml
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: build/test-results.xml
+          check_name: Unit Test Report
+          detailed_summary: true
+          include_passed: true
+          fail_on_failure: false
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          mkdir -p coverage
+          gcovr \
+            --root . \
+            --filter 'src/' \
+            --filter 'include/camera_preview/' \
+            --exclude 'tests/' \
+            --print-summary \
+            --html-details coverage/index.html \
+            --cobertura coverage/coverage.xml
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            build/test-results.xml
+            coverage/
