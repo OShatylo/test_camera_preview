@@ -15,44 +15,44 @@ namespace
 
 constexpr double fps_measurement_interval_sec{1.0};
 
-void capture_loop(std::shared_ptr<camera_source::Camera_source> camera_source, Latest_frame_buffer *frame_buffer,
-                  std::atomic<bool> *stop_requested, std::atomic<bool> *capture_failed)
+void capture_loop(std::shared_ptr<camera_source::Camera_source> camera_source, Latest_frame_buffer &frame_buffer,
+                  std::atomic<bool> &stop_requested, std::atomic<bool> &capture_failed)
 {
-    while (!stop_requested->load())
+    while (!stop_requested.load())
     {
         Frame frame;
 
         if (!camera_source->read(frame))
         {
-            if (!stop_requested->load())
+            if (!stop_requested.load())
             {
                 std::cerr << "Failed to read frame\n";
-                capture_failed->store(true);
+                capture_failed.store(true);
             }
 
-            stop_requested->store(true);
-            frame_buffer->stop();
+            stop_requested.store(true);
+            frame_buffer.stop();
 
             return;
         }
 
-        frame_buffer->push(std::move(frame));
+        frame_buffer.push(std::move(frame));
     }
 }
 
-void render_loop(std::shared_ptr<renderer::Renderer> renderer, Latest_frame_buffer *frame_buffer,
-                 std::atomic<bool> *stop_requested)
+void render_loop(std::shared_ptr<renderer::Renderer> renderer, Latest_frame_buffer &frame_buffer,
+                 std::atomic<bool> &stop_requested)
 {
     std::size_t frame_counter{0};
     double measured_fps{0.0};
 
     auto fps_start{std::chrono::steady_clock::now()};
 
-    while (!stop_requested->load())
+    while (!stop_requested.load())
     {
         Frame frame;
 
-        if (!frame_buffer->wait_and_pop(frame))
+        if (!frame_buffer.wait_and_pop(frame))
         {
             break;
         }
@@ -73,12 +73,12 @@ void render_loop(std::shared_ptr<renderer::Renderer> renderer, Latest_frame_buff
             fps_start = now;
         }
 
-        const renderer::Render_statistics statistics{measured_fps, frame_age_ms, frame_buffer->dropped_frames()};
+        const renderer::Render_statistics statistics{measured_fps, frame_age_ms, frame_buffer.dropped_frames()};
 
         if (!renderer->render(frame, statistics))
         {
-            stop_requested->store(true);
-            frame_buffer->stop();
+            stop_requested.store(true);
+            frame_buffer.stop();
 
             break;
         }
@@ -119,9 +119,9 @@ bool Application::run()
     std::atomic<bool> stop_requested{false};
     std::atomic<bool> capture_failed{false};
 
-    std::thread capture_thread{capture_loop, camera_source_, &frame_buffer, &stop_requested, &capture_failed};
+    std::thread capture_thread{[&] { capture_loop(camera_source_, frame_buffer, stop_requested, capture_failed); }};
 
-    std::thread render_thread{render_loop, renderer_, &frame_buffer, &stop_requested};
+    std::thread render_thread{[&] { render_loop(renderer_, frame_buffer, stop_requested); }};
 
     capture_thread.join();
     render_thread.join();

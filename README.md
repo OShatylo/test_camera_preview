@@ -95,6 +95,14 @@ Covered scenarios include:
 
 ## Implemented Levels
 
+### Level 0 — Minimum
+
+Implemented:
+
+- camera capture and live preview;
+- exit using Esc, q, or Q;
+- stable continuous operation without crashes during normal use.
+
 ### Level 1 — Basic camera preview
 
 Implemented:
@@ -126,3 +134,21 @@ Implemented:
   - dropped frame count;
 - dependency injection for `Camera_source`, `Renderer`, and `Device_validator`;
 - unit tests using GoogleTest and GoogleMock.
+- GitHub Actions workflow for automated build, tests, and code coverage.
+
+### Level 3 — Production-oriented features
+- not implemented yet.
+
+### Implementation Notes
+
+The application uses OpenCV with the V4L2 backend.
+
+OpenCV was chosen because it provides simple camera capture and rendering, while V4L2 is used for Linux camera capabilities and mode validation.
+
+For Level 2, capture and render run in separate threads. A single latest-frame buffer is used, so old frames can be dropped to keep latency low.
+
+#### Potential bottlenecks
+
+- Camera/driver internal buffering
+- Frame decoding or pixel format conversion
+- `cv::imshow()` / `cv::waitKey()` rendering overhead

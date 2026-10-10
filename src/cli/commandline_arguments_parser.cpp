@@ -27,7 +27,7 @@ Commandline_arguments_parser::Commandline_arguments_parser(int argc, char *argv[
 
 void Commandline_arguments_parser::print_usage(const char *application_name)
 {
-    std::cout << "Usage " << application_name << " --device 0 --width 800 --height 600 --fps 30 \n"
+    std::cout << "Usage " << application_name << " --device /dev/video0 --width 800 --height 600 --fps 30 \n"
               << "Parameters description: \n"
               << "--device  camera device\n"
               << "--width   frame width\n"
